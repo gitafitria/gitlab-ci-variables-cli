@@ -1,28 +1,30 @@
-import axios from 'axios';
-import URL from 'url-parse';
-import isPrimitive from 'is-primitive';
+import axios from "axios";
+import URL from "url-parse";
+import isPrimitive from "is-primitive";
 
 /**
  * Provides utility functions to simplify interacting with a GitLab CI project through the API
  *
  * @param {string} url
  * @param {string} token
+ * @param {string} environment - optional
  *
  * @return {object} utility functions wrapped in an object
  */
-export default function gitlabCI(url, token) {
+export default function gitlabCI(url, token, environment = "*") {
   const parsedUrl = new URL(url);
   const perPageDefault = 100;
 
   // Construct project id by encoding namespace/projectName
   const projectId = parsedUrl.pathname
-    .split('/')
-    .filter(x => x)
-    .join('%2F');
+    .split("/")
+    .filter((x) => x)
+    .join("%2F");
 
   const apiUrl = `${parsedUrl.origin}/api/v4/projects/${projectId}/variables`;
   const tokenQueryString = `private_token=${token}`;
   const perPageQueryString = `per_page=${perPageDefault}`;
+  const environmentFilter = `filter[environment_scope]=${environment}`;
 
   /**
    * Will serialise a value using `JSON.stringify` if it is not primative.
@@ -48,7 +50,7 @@ export default function gitlabCI(url, token) {
    */
   async function createVariable(key, value) {
     const response = await axios({
-      method: 'post',
+      method: "post",
       url: `${apiUrl}?${tokenQueryString}`,
       data: {
         key,
@@ -71,7 +73,7 @@ export default function gitlabCI(url, token) {
    */
   async function updateVariable(key, value) {
     const response = await axios({
-      method: 'put',
+      method: "put",
       url: `${apiUrl}/${key}?${tokenQueryString}`,
       data: {
         key,
@@ -90,7 +92,9 @@ export default function gitlabCI(url, token) {
    * @return {Promise<Array>} array of variable objects
    */
   async function listVariables() {
-    const response = await axios.get(`${apiUrl}?${tokenQueryString}&${perPageQueryString}`);
+    const response = await axios.get(
+      `${apiUrl}?${tokenQueryString}&${perPageQueryString}&${environmentFilter}`
+    );
 
     return response.data;
   }
@@ -108,7 +112,9 @@ export default function gitlabCI(url, token) {
       return null;
     }
 
-    const existingKeys = (await listVariables()).map(variable => variable.key);
+    const existingKeys = (await listVariables()).map(
+      (variable) => variable.key
+    );
     const keysToSet = Object.keys(properties);
 
     const promises = keysToSet.map(async (key) => {
@@ -134,7 +140,7 @@ export default function gitlabCI(url, token) {
 
     const variables = await Promise.all(promises);
 
-    return variables.filter(variable => variable);
+    return variables.filter((variable) => variable);
   }
 
   return {
