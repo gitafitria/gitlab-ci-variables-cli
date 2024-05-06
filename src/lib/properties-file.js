@@ -1,5 +1,5 @@
-import fs from 'fs';
-import yaml from 'js-yaml';
+import fs from "fs";
+import yaml from "js-yaml";
 
 /**
  * Load properties file into properties object
@@ -12,7 +12,7 @@ import yaml from 'js-yaml';
 export function loadPropertiesFile(path) {
   let doc;
   try {
-    const contents = fs.readFileSync(path, 'utf8');
+    const contents = fs.readFileSync(path, "utf8");
     doc = yaml.safeLoad(contents);
   } catch (error) {
     console.log(error);
@@ -30,14 +30,24 @@ export function loadPropertiesFile(path) {
  *
  */
 export function savePropertiesFile(path, obj) {
-  const contents = {};
+  const envVars = {};
+  // group env based on its environment_scope
   obj.forEach((envVar) => {
-    contents[envVar.key] = envVar.value;
+    if (!envVars[envVar.environment_scope]) {
+      envVars[envVar.environment_scope] = [];
+    }
+    envVars[envVar.environment_scope].push(`${envVar.key}: ${envVar.value}`);
+  });
+
+  const contents = [];
+  Object.keys(envVars).forEach((env) => {
+    contents.push(`# environment_scope: ${env}`);
+    contents.push(envVars[env].join("\n"));
   });
 
   try {
-    const string = yaml.safeDump(contents);
-    fs.writeFileSync(path, string, 'utf8');
+    // const string = yaml.safeDump(contents);
+    fs.writeFileSync(path, contents.join("\n"), "utf8");
   } catch (error) {
     console.log(error);
   }

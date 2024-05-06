@@ -48,13 +48,14 @@ export default function gitlabCI(url, token, environment = "*") {
    *
    * @return {Promise<Object>} variable object
    */
-  async function createVariable(key, value) {
+  async function createVariable(key, value, environment_scope = "*") {
     const response = await axios({
       method: "post",
       url: `${apiUrl}?${tokenQueryString}`,
       data: {
         key,
         value: serialiseValue(value),
+        environment_scope,
       },
     });
 
@@ -92,10 +93,14 @@ export default function gitlabCI(url, token, environment = "*") {
    * @return {Promise<Array>} array of variable objects
    */
   async function listVariables() {
+    console.log(
+      `>>>>>>>>> link = ${apiUrl}?${tokenQueryString}&${perPageQueryString}&${environmentFilter}`
+    );
     const response = await axios.get(
       `${apiUrl}?${tokenQueryString}&${perPageQueryString}&${environmentFilter}`
     );
 
+    console.log({ data: response.data });
     return response.data;
   }
 
@@ -107,7 +112,7 @@ export default function gitlabCI(url, token, environment = "*") {
    *
    * @return {Promise<Array>} array of variable objects
    */
-  async function setVariables(properties, forceUpdate) {
+  async function setVariables(properties, forceUpdate, environment_scope) {
     if (!properties) {
       return null;
     }
@@ -132,7 +137,7 @@ export default function gitlabCI(url, token, environment = "*") {
         variable = await updateVariable(key, value);
       } else {
         // Create variable
-        variable = await createVariable(key, value);
+        variable = await createVariable(key, value, environment_scope);
       }
 
       return variable;

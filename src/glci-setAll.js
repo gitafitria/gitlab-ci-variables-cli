@@ -14,7 +14,11 @@ async function execute(cmd) {
   } else {
     handler = gitlabCI(conf.url, conf.token);
   }
-  const resp = await handler.setVariables(properties, !cmd.doNotForce);
+  const resp = await handler.setVariables(
+    properties,
+    !cmd.doNotForce,
+    conf.environment
+  );
 
   console.log("Completed setting variables on Gitlab CI.");
   return resp;

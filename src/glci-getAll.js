@@ -10,6 +10,7 @@ async function execute() {
 
   let handler;
   if (conf.environment) {
+    console.log({ env: conf.environment });
     handler = gitlabCI(conf.url, conf.token, conf.environment);
   } else {
     handler = gitlabCI(conf.url, conf.token);
@@ -39,7 +40,7 @@ program
     "The location to save the result to",
     "gitlab.env.yml"
   )
-  .option("--environment <output>", "The location to save the result to")
+  .option("--environment <environment>", "The location to save the result to")
   .parse(process.argv);
 
 execute(program);
